@@ -10,13 +10,13 @@ import { ReservationAgenda } from '@/components/reservations/ReservationAgenda';
 import { ReservationList } from '@/components/reservations/ReservationList';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Plus, CalendarDays, List, DoorOpen } from 'lucide-react';
+import { Plus, CalendarDays, List, DoorOpen, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 const Reservas = () => {
-  const { rooms, reservations, addReservation, deleteReservation, getReservationsByDate } = useData();
+  const { rooms, reservations, isLoading, addReservation, deleteReservation, getReservationsByDate } = useData();
   const { toast } = useToast();
   
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -24,6 +24,7 @@ const Reservas = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null);
   const [viewMode, setViewMode] = useState<'agenda' | 'list'>('agenda');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const dayReservations = getReservationsByDate(dateStr);
@@ -45,19 +46,21 @@ const Reservas = () => {
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (reservationToDelete) {
-      deleteReservation(reservationToDelete.id);
+      setIsSubmitting(true);
+      await deleteReservation(reservationToDelete.id);
       toast({
         title: 'Reserva cancelada',
         description: 'A reserva foi cancelada com sucesso.',
       });
       setReservationToDelete(null);
+      setIsSubmitting(false);
     }
     setDeleteConfirmOpen(false);
   };
 
-  const handleFormSubmit = (data: {
+  const handleFormSubmit = async (data: {
     roomId: string;
     roomName: string;
     date: string;
@@ -65,7 +68,7 @@ const Reservas = () => {
     endTime: string;
     observation: string;
   }) => {
-    const success = addReservation(data);
+    const success = await addReservation(data);
     
     if (success) {
       toast({
@@ -80,6 +83,14 @@ const Reservas = () => {
   // Dias com reservas para destacar no calendário
   const reservationDates = [...new Set(reservations.map(r => r.date))];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -87,7 +98,7 @@ const Reservas = () => {
           <h1 className="text-2xl font-bold text-foreground">Reservas</h1>
           <p className="text-muted-foreground">Gerencie as reservas de salas</p>
         </div>
-        <Button onClick={handleAddReservation} className="gap-2">
+        <Button onClick={handleAddReservation} className="gap-2" disabled={isSubmitting}>
           <Plus className="h-4 w-4" />
           Nova Reserva
         </Button>
