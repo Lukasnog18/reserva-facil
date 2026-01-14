@@ -27,7 +27,7 @@ interface ReservationFormProps {
     startTime: string;
     endTime: string;
     observation: string;
-  }) => boolean;
+  }) => Promise<boolean>;
 }
 
 const generateTimeOptions = () => {
@@ -117,12 +117,14 @@ export const ReservationForm = ({
     if (!validate()) return;
 
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
 
     const room = rooms.find(r => r.id === roomId);
-    if (!room || !date) return;
+    if (!room || !date) {
+      setIsSubmitting(false);
+      return;
+    }
 
-    const success = onSubmit({
+    const success = await onSubmit({
       roomId,
       roomName: room.name,
       date: format(date, 'yyyy-MM-dd'),

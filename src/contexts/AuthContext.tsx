@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User, AuthState } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
@@ -9,6 +11,12 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const mapSupabaseUser = (supabaseUser: SupabaseUser): User => ({
+  id: supabaseUser.id,
+  name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Usuário',
+  email: supabaseUser.email || '',
+});
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -17,65 +25,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    // Simula verificação de sessão
-    const storedUser = localStorage.getItem('reserva_salas_user');
-    if (storedUser) {
-      setState({
-        user: JSON.parse(storedUser),
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } else {
-      setState(prev => ({ ...prev, isLoading: false }));
-    }
+    // Set up auth state listener BEFORE checking session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          setState({
+            user: mapSupabaseUser(session.user),
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          setState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setState({
+          user: mapSupabaseUser(session.user),
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } else {
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setState(prev => ({ ...prev, isLoading: true }));
     
-    // Simula delay de API
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     
-    // Validação simples para demonstração
-    if (email && password.length >= 6) {
-      const user: User = {
-        id: crypto.randomUUID(),
-        name: email.split('@')[0],
-        email,
-      };
-      
-      localStorage.setItem('reserva_salas_user', JSON.stringify(user));
-      setState({ user, isAuthenticated: true, isLoading: false });
-      return true;
+    if (error || !data.user) {
+      setState(prev => ({ ...prev, isLoading: false }));
+      return false;
     }
     
-    setState(prev => ({ ...prev, isLoading: false }));
-    return false;
+    setState({
+      user: mapSupabaseUser(data.user),
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    
+    return true;
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string): Promise<boolean> => {
     setState(prev => ({ ...prev, isLoading: true }));
     
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: {
+          name,
+        },
+      },
+    });
     
-    if (name && email && password.length >= 6) {
-      const user: User = {
-        id: crypto.randomUUID(),
-        name,
-        email,
-      };
-      
-      localStorage.setItem('reserva_salas_user', JSON.stringify(user));
-      setState({ user, isAuthenticated: true, isLoading: false });
-      return true;
+    if (error || !data.user) {
+      setState(prev => ({ ...prev, isLoading: false }));
+      return false;
     }
     
-    setState(prev => ({ ...prev, isLoading: false }));
-    return false;
+    setState({
+      user: mapSupabaseUser(data.user),
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    
+    return true;
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('reserva_salas_user');
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setState({ user: null, isAuthenticated: false, isLoading: false });
   }, []);
 
