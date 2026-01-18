@@ -54,8 +54,8 @@ export const ReservationAgenda = ({ reservations, rooms, onDelete }: Reservation
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[800px]">
+    <div className="overflow-x-auto border border-border rounded-lg">
+      <div className="min-w-[800px] p-2">
         {/* Header com nomes das salas */}
         <div className="grid gap-2" style={{ gridTemplateColumns: `80px repeat(${rooms.length}, 1fr)` }}>
           <div className="sticky left-0 bg-background z-10"></div>

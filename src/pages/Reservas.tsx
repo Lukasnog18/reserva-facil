@@ -106,7 +106,7 @@ const Reservas = () => {
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Calendário */}
-        <Card>
+        <Card className="h-fit">
           <CardContent className="p-4">
             <Calendar
               mode="single"

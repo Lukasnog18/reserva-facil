@@ -8,13 +8,13 @@ export const AppLayout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <SidebarInset className="flex-1">
-          <header className="flex h-14 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sticky top-0 z-40">
+        <SidebarInset className="flex-1 overflow-hidden">
+          <header className="flex h-14 items-center gap-4 border-b border-border bg-background px-4 sticky top-0 z-30">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex-1" />
           </header>
-          <main className="flex-1 p-4 md:p-6">
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
             <Outlet />
           </main>
         </SidebarInset>
