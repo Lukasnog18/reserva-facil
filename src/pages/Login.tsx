@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Loader2, Mail, Lock } from 'lucide-react';
+import { CalendarDays, Loader2, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -62,28 +62,61 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md animate-slide-up">
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
-              <CalendarDays className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen flex">
+      {/* Left Panel - Decorative */}
+      <div className="hidden lg:flex lg:w-1/2 gradient-primary relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="relative z-10 flex flex-col justify-center p-12 text-primary-foreground">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+              <CalendarDays className="h-8 w-8" />
             </div>
-            <span className="text-2xl font-bold text-foreground">Reserva de Salas</span>
+            <span className="text-3xl font-bold">Reserva de Salas</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-4">
+            Gerencie suas reservas com facilidade
+          </h1>
+          <p className="text-lg opacity-90 max-w-md">
+            Sistema completo para agendamento e controle de salas de reunião.
+            Organize, reserve e acompanhe em tempo real.
+          </p>
+          
+          {/* Decorative elements */}
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-x-1/2 translate-y-1/2" />
+          <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full" />
+        </div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex flex-col bg-background">
+        <div className="flex justify-between items-center p-6">
+          <div className="lg:hidden flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
+              <CalendarDays className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-lg font-semibold text-foreground">Reservas</span>
+          </div>
+          <div className="ml-auto">
+            <ThemeToggle />
           </div>
         </div>
 
-        <Card className="shadow-card">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Entrar</CardTitle>
-            <CardDescription>
-              Acesse sua conta para gerenciar reservas
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="w-full max-w-sm animate-slide-up">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Bem-vindo de volta
+              </h2>
+              <p className="text-muted-foreground">
+                Entre com suas credenciais para continuar
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email" className="text-sm font-medium">
+                  E-mail
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -92,17 +125,19 @@ const Login = () => {
                     placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                    className={`pl-10 h-11 ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     disabled={isLoading}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
+                  <p className="text-xs text-destructive">{errors.email}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Senha
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -111,35 +146,43 @@ const Login = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 ${errors.password ? 'border-destructive' : ''}`}
+                    className={`pl-10 h-11 ${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     disabled={isLoading}
                   />
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
+                  <p className="text-xs text-destructive">{errors.password}</p>
                 )}
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+
+              <Button type="submit" className="w-full h-11 gap-2" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Entrando...
                   </>
                 ) : (
-                  'Entrar'
+                  <>
+                    Entrar
+                    <ArrowRight className="h-4 w-4" />
+                  </>
                 )}
               </Button>
-              <p className="text-sm text-center text-muted-foreground">
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground">
                 Não tem uma conta?{' '}
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  Cadastre-se
+                <Link 
+                  to="/register" 
+                  className="text-primary hover:underline font-medium transition-colors"
+                >
+                  Cadastre-se gratuitamente
                 </Link>
               </p>
-            </CardFooter>
-          </form>
-        </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
